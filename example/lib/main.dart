@@ -43,4 +43,3 @@ class TiledGame extends BaseGame {
     });
   }
 }
-
