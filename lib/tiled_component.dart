@@ -6,7 +6,6 @@ import 'dart:ui';
 import './tiled.dart';
 
 class TiledComponent extends Component {
-
   Tiled _tiled;
 
   TiledComponent(String filename, double destTileSize) {
@@ -28,5 +27,6 @@ class TiledComponent extends Component {
 
   get future => _tiled.future;
 
-  Future<ObjectGroup> getObjectGroupFromLayer(String name) => _tiled.getObjectGroupFromLayer(name);
+  Future<ObjectGroup> getObjectGroupFromLayer(String name) =>
+      _tiled.getObjectGroupFromLayer(name);
 }

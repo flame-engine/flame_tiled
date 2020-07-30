@@ -26,4 +26,3 @@ class TestAssetBundle extends CachingAssetBundle {
   Future<String> loadString(String key, {bool cache = true}) =>
       File('assets/map.tmx').readAsString();
 }
-
