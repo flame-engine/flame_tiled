@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 import '../lib/tiled_component.dart';
 
 void main() {
-  test('my first widget test', () async {
+  test('correct loads the file', () async {
     await Flame.init(bundle: TestAssetBundle());
     final tiled = TiledComponent('x', 16);
     await tiled.future;
