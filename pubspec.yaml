@@ -1,17 +1,19 @@
 name: flame_tiled
 description: Package to add Tiled support for the Flame game engine
 version: 0.0.1
-author:
-homepage:
+homepage: https://github.com/flame-engine/flame_tiled
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
   flutter: ">=1.17.0 <2.0.0"
 
 dependencies:
+  flame: '>=0.23.0 <1.0.0'
+  tiled: ^0.6.0
   flutter:
     sdk: flutter
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  test: ^1.9.4
