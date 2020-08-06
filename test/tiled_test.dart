@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flame/flame.dart';
 import 'package:flutter/services.dart' show CachingAssetBundle;
@@ -10,7 +11,7 @@ import '../lib/tiled_component.dart';
 void main() {
   test('correct loads the file', () async {
     await Flame.init(bundle: TestAssetBundle());
-    final tiled = TiledComponent('x', 16);
+    final tiled = TiledComponent('x', Size(16, 16));
     await tiled.future;
     expect(1, equals(1));
   });

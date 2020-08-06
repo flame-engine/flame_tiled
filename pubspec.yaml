@@ -1,6 +1,6 @@
 name: flame_tiled
 description: Package to add Tiled support for the Flame game engine
-version: 0.0.1
+version: 0.1.0
 homepage: https://github.com/flame-engine/flame_tiled
 
 environment:
