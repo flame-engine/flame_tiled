@@ -8,7 +8,7 @@ import './tiled.dart';
 class TiledComponent extends Component {
   Tiled _tiled;
 
-  TiledComponent(String filename, double destTileSize) {
+  TiledComponent(String filename, Size destTileSize) {
     _tiled = Tiled(filename, destTileSize);
   }
 
