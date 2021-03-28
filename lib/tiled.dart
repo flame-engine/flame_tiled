@@ -2,8 +2,9 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/sprite_batch.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:tiled/tiled.dart' hide Image;
 
@@ -71,10 +72,10 @@ class _SimpleFlips {
 /// This component renders a tile map based on a TMX file from Tiled.
 class Tiled {
   String filename;
-  TileMap map;
-  Image image;
-  Map<String, SpriteBatch> batches = <String, SpriteBatch>{};
-  Future future;
+  late TileMap map;
+  Image? image;
+  Map<String?, SpriteBatch> batches = <String, SpriteBatch>{};
+  Future? future;
   bool _loaded = false;
   Size destTileSize;
 
@@ -88,7 +89,7 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    image = await Flame.images.load(map.tilesets[0].image.source);
+    image = await Flame.images.load(map.tilesets[0].image!.source!);
     batches = await _loadImages(map);
     generate();
     _loaded = true;
@@ -101,11 +102,11 @@ class Tiled {
     });
   }
 
-  Future<Map<String, SpriteBatch>> _loadImages(TileMap map) async {
-    final Map<String, SpriteBatch> result = {};
-    await Future.forEach(map.tilesets, (tileset) async {
-      await Future.forEach(tileset.images, (tmxImage) async {
-        result[tmxImage.source] = await SpriteBatch.withAsset(tmxImage.source);
+  Future<Map<String?, SpriteBatch>> _loadImages(TileMap map) async {
+    final Map<String?, SpriteBatch> result = {};
+    await Future.forEach(map.tilesets, (Tileset tileset) async {
+      await Future.forEach(tileset.images, (dynamic tmxImage) async {
+        result[tmxImage.source] = await SpriteBatch.load(tmxImage.source);
       });
     });
     return result;
@@ -114,20 +115,20 @@ class Tiled {
   /// Generate the sprite batches from the existing tilemap.
   void generate() {
     for (var batch in batches.keys) {
-      batches[batch].clear();
+      batches[batch]!.clear();
     }
     _drawTiles(map);
   }
 
   void _drawTiles(TileMap map) {
-    map.layers.where((layer) => layer.visible).forEach((layer) {
-      layer.tiles.forEach((tileRow) {
+    map.layers.where((layer) => layer.visible!).forEach((layer) {
+      layer.tiles!.forEach((tileRow) {
         tileRow.forEach((tile) {
-          if (tile.gid == 0) {
+          if (tile!.gid == 0) {
             return;
           }
 
-          final batch = batches[tile.image.source];
+          final batch = batches[tile.image!.source]!;
 
           final rect = tile.computeDrawRect();
 
@@ -138,20 +139,19 @@ class Tiled {
             rect.height.toDouble(),
           );
 
-          final flips = _SimpleFlips.fromFlips(tile.flips);
-          final Size tileSize = destTileSize ??
-              Size(tile.width.toDouble(), tile.height.toDouble());
+          final flips = _SimpleFlips.fromFlips(tile.flips!);
+          final Size tileSize = destTileSize;
 
           batch.add(
-            rect: src,
-            offset: Offset(
-              tile.x.toDouble() * tileSize.width +
-                  (tile.flips.horizontally ? tileSize.width : 0),
-              tile.y.toDouble() * tileSize.height +
-                  (tile.flips.vertically ? tileSize.height : 0),
+            source: src,
+            offset: Vector2(
+              tile.x!.toDouble() * tileSize.width +
+                  (tile.flips!.horizontally ? tileSize.width : 0),
+              tile.y!.toDouble() * tileSize.height +
+                  (tile.flips!.vertically ? tileSize.height : 0),
             ),
             rotation: flips.angle * math.pi / 2,
-            scale: tileSize.width / tile.width,
+            scale: tileSize.width / tile.width!,
           );
         });
       });
@@ -173,7 +173,7 @@ class Tiled {
   /// This returns an object group fetch by name from a given layer.
   /// Use this to add custom behaviour to special objects and groups.
   Future<ObjectGroup> getObjectGroupFromLayer(String name) {
-    return future.then((onValue) {
+    return future!.then((onValue) {
       return map.objectGroups
           .firstWhere((objectGroup) => objectGroup.name == name);
     });
