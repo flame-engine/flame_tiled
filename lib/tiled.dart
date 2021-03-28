@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:xml/xml.dart';
+
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
@@ -95,11 +97,27 @@ class Tiled {
     _loaded = true;
   }
 
-  Future<TileMap> _loadMap() {
-    return Flame.bundle.loadString('assets/tiles/$filename').then((contents) {
-      final parser = TileMapParser();
-      return parser.parse(contents);
-    });
+  XmlDocument _parseXml(String input) => XmlDocument.parse(input);
+
+  Future<TileMap> _loadMap() async {
+    String file = await Flame.bundle.loadString('assets/tiles/$filename');
+    final parser = TileMapParser();
+
+    final String? tsxSourcePath = _parseXml(file)
+        .rootElement
+        .children
+        .whereType<XmlElement?>()
+        .firstWhere((XmlElement? element) => element?.name.local == 'tileset',
+            orElse: () => null)
+        ?.getAttribute('source');
+    if (tsxSourcePath != null) {
+      final TiledTsxProvider tsxProvider = TiledTsxProvider(tsxSourcePath);
+      await tsxProvider.initialize();
+
+      return parser.parse(file, tsx: tsxProvider);
+    } else {
+      return parser.parse(file);
+    }
   }
 
   Future<Map<String?, SpriteBatch>> _loadImages(TileMap map) async {
@@ -123,7 +141,7 @@ class Tiled {
   void _drawTiles(TileMap map) {
     map.layers.where((layer) => layer.visible!).forEach((layer) {
       layer.tiles!.forEach((tileRow) {
-        tileRow.forEach((tile) {
+        tileRow.forEach((Tile? tile) {
           if (tile!.gid == 0) {
             return;
           }
@@ -177,5 +195,20 @@ class Tiled {
       return map.objectGroups
           .firstWhere((objectGroup) => objectGroup.name == name);
     });
+  }
+}
+
+class TiledTsxProvider implements TsxProvider {
+  String? data;
+  final String key;
+
+  Future<void> initialize() async {
+    this.data = await Flame.bundle.loadString('assets/tiles/$key');
+  }
+
+  TiledTsxProvider(this.key);
+
+  String getSource(String key) {
+    return data!;
   }
 }
