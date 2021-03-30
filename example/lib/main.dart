@@ -42,8 +42,8 @@ class TiledGame extends BaseGame {
           ),
         ),
       );
-      comp.x = obj.x!.toDouble();
-      comp.y = obj.y!.toDouble();
+      comp.x = obj.x.toDouble();
+      comp.y = obj.y.toDouble();
       add(comp);
     });
   }

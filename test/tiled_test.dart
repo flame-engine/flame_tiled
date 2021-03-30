@@ -3,15 +3,21 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:flame/flame.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show CachingAssetBundle;
 import 'package:test/test.dart';
 import '../lib/tiled_component.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   test('correct loads the file', () async {
-    await Flame.init(bundle: TestAssetBundle());
-    final tiled = TiledComponent('x', Size(16, 16));
+    MaterialApp(
+      home: DefaultAssetBundle(
+        bundle: TestAssetBundle(),
+        child: Container(),
+      ),
+    );
+    final tiled = TiledComponent('map.tmx', Size(16, 16));
     await tiled.future;
     expect(1, equals(1));
   });
@@ -25,5 +31,5 @@ class TestAssetBundle extends CachingAssetBundle {
 
   @override
   Future<String> loadString(String key, {bool cache = true}) =>
-      File('assets/map.tmx').readAsString();
+      File('assets/tiles/map.tmx').readAsString();
 }

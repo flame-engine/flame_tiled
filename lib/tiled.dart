@@ -89,7 +89,7 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    image = await Flame.images.load(map.tilesets[0].image!.source!);
+    image = await Flame.images.load(map.tilesets[0].image!.source);
     batches = await _loadImages(map);
     generate();
     _loaded = true;
@@ -121,10 +121,10 @@ class Tiled {
   }
 
   void _drawTiles(TileMap map) {
-    map.layers.where((layer) => layer.visible!).forEach((layer) {
-      layer.tiles!.forEach((tileRow) {
+    map.layers.where((layer) => layer.visible).forEach((layer) {
+      layer.tiles.forEach((tileRow) {
         tileRow.forEach((tile) {
-          if (tile!.gid == 0) {
+          if (tile.gid == 0) {
             return;
           }
 
@@ -145,13 +145,13 @@ class Tiled {
           batch.add(
             source: src,
             offset: Vector2(
-              tile.x!.toDouble() * tileSize.width +
+              tile.x.toDouble() * tileSize.width +
                   (tile.flips!.horizontally ? tileSize.width : 0),
-              tile.y!.toDouble() * tileSize.height +
+              tile.y.toDouble() * tileSize.height +
                   (tile.flips!.vertically ? tileSize.height : 0),
             ),
             rotation: flips.angle * math.pi / 2,
-            scale: tileSize.width / tile.width!,
+            scale: tileSize.width / tile.width,
           );
         });
       });
