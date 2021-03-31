@@ -17,3 +17,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   test: ^1.9.4
+
+flutter:
+  assets:
+    - assets/map-level1.png
+    - assets/tiles/map.tmx

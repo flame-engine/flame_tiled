@@ -7,9 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show CachingAssetBundle;
 import 'package:test/test.dart';
 import '../lib/tiled_component.dart';
+import 'package:flutter_test/flutter_test.dart' show TestWidgetsFlutterBinding;
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('correct loads the file', () async {
     MaterialApp(
       home: DefaultAssetBundle(
