@@ -89,6 +89,7 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
+
     if (map.tilesets[0].image != null)
       image = await Flame.images.load(map.tilesets[0].image.source);
     batches = await _loadImages(map);
