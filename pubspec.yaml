@@ -8,7 +8,7 @@ environment:
   flutter: ">=1.17.0 <2.0.0"
 
 dependencies:
-  flame: '>=0.23.0 <1.0.0'
+  flame: ^1.0.0-rc8
   tiled: ^0.6.0
   flutter:
     sdk: flutter

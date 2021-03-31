@@ -2,8 +2,9 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/sprite_batch.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:tiled/tiled.dart' hide Image;
 
@@ -105,7 +106,7 @@ class Tiled {
     final Map<String, SpriteBatch> result = {};
     await Future.forEach(map.tilesets, (tileset) async {
       await Future.forEach(tileset.images, (tmxImage) async {
-        result[tmxImage.source] = await SpriteBatch.withAsset(tmxImage.source);
+        result[tmxImage.source] = await SpriteBatch.load(tmxImage.source);
       });
     });
     return result;
@@ -143,8 +144,8 @@ class Tiled {
               Size(tile.width.toDouble(), tile.height.toDouble());
 
           batch.add(
-            rect: src,
-            offset: Offset(
+            source: src,
+            offset: Vector2(
               tile.x.toDouble() * tileSize.width +
                   (tile.flips.horizontally ? tileSize.width : 0),
               tile.y.toDouble() * tileSize.height +
