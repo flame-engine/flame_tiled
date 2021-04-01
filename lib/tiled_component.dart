@@ -13,16 +13,12 @@ class TiledComponent extends IsometricTileMapComponent {
 
   Tiled _tiled;
 
-  TiledComponent(String filename, Size destTileSize,{this.matrix, this.tileset}) : super(tileset, matrix) {
-    _tiled = Tiled(filename, destTileSize);
-  }
+  TiledComponent(String filename, Size destTileSize,{this.matrix, this.tileset}) : super(tileset, matrix) { _tiled = Tiled(filename, destTileSize);}
 
   TiledComponent.fromTiled(this._tiled,{this.matrix, this.tileset}) :  super(tileset, matrix);
 
   @override
-  void update(double dt) {
-
-  }
+  void update(double dt) {}
 
   @override
   void render(Canvas canvas) {
