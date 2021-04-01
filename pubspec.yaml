@@ -9,7 +9,7 @@ environment:
 
 dependencies:
   flame: ^1.0.0-rc8
-  tiled: ^0.4.0
+  tiled: ^0.6.0
   flutter:
     sdk: flutter
 
