@@ -7,6 +7,7 @@ import 'dart:ui';
 import './tiled.dart';
 
 class TiledComponent extends IsometricTileMapComponent {
+
   final SpriteSheet tileset;
   final List<List<int>> matrix;
 
@@ -16,7 +17,7 @@ class TiledComponent extends IsometricTileMapComponent {
     _tiled = Tiled(filename, destTileSize);
   }
 
-  TiledComponent.fromTiled(this._tiled,{this.matrix, this.tileset}) :  super(tileset, matrix) ;
+  TiledComponent.fromTiled(this._tiled,{this.matrix, this.tileset}) :  super(tileset, matrix);
 
   @override
   void update(double dt) {
