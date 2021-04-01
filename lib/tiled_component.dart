@@ -17,6 +17,7 @@ class TiledComponent extends IsometricTileMapComponent {
 
   TiledComponent.fromTiled(this._tiled,{this.matrix, this.tileset}) :  super(tileset, matrix);
 
+
   @override
   void update(double dt) {}
 
