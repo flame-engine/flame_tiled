@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:ui';
 
-
 import 'package:xml/xml.dart';
 
 import 'package:flame/flame.dart';
@@ -91,8 +90,9 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    if (map.tilesets[0].image != null)
+    if (map.tilesets[0].image != null) {
       image = await Flame.images.load(map.tilesets[0].image.source);
+    }
     batches = await _loadImages(map);
     generate();
     _loaded = true;
@@ -104,13 +104,14 @@ class Tiled {
     String file = await Flame.bundle.loadString('assets/tiles/$filename');
     final parser = TileMapParser();
 
-    final String tsxSourcePath = _parseXml(file)
+    final tsxSourcePath = _parseXml(file)
         .rootElement
         .children
         .whereType<XmlElement>()
-        .firstWhere((element) => element.name.local == 'tileset', orElse: () => null)
+        .firstWhere((element) => element.name.local == 'tileset',
+            orElse: () => null)
         ?.getAttribute('source');
-    if(tsxSourcePath != null) {
+    if (tsxSourcePath != null) {
       final TiledTsxProvider tsxProvider = TiledTsxProvider(tsxSourcePath);
       await tsxProvider.initialize();
 
@@ -146,37 +147,35 @@ class Tiled {
             return;
           }
 
-
           if (tile.image == null) {
-            throw('Tile ${tile.x}:${tile.y} gid ${tile.gid} image is null');
-          } else {
-            final batch = batches[tile.image.source];
-
-            final rect = tile.computeDrawRect();
-
-            final src = Rect.fromLTWH(
-              rect.left.toDouble(),
-              rect.top.toDouble(),
-              rect.width.toDouble(),
-              rect.height.toDouble(),
-            );
-
-            final flips = _SimpleFlips.fromFlips(tile.flips);
-            final Size tileSize = destTileSize ??
-                Size(tile.width.toDouble(), tile.height.toDouble());
-
-            batch.add(
-              rect: src,
-              offset: Offset(
-                tile.x.toDouble() * tileSize.width +
-                    (tile.flips.horizontally ? tileSize.width : 0),
-                tile.y.toDouble() * tileSize.height +
-                    (tile.flips.vertically ? tileSize.height : 0),
-              ),
-              rotation: flips.angle * math.pi / 2,
-              scale: tileSize.width / tile.width,
-            );
+            throw 'Tile ${tile.x}:${tile.y} gid ${tile.gid} image is null';
           }
+          final batch = batches[tile.image.source];
+
+          final rect = tile.computeDrawRect();
+
+          final src = Rect.fromLTWH(
+            rect.left.toDouble(),
+            rect.top.toDouble(),
+            rect.width.toDouble(),
+            rect.height.toDouble(),
+          );
+
+          final flips = _SimpleFlips.fromFlips(tile.flips);
+          final Size tileSize = destTileSize ??
+              Size(tile.width.toDouble(), tile.height.toDouble());
+
+          batch.add(
+            rect: src,
+            offset: Offset(
+              tile.x.toDouble() * tileSize.width +
+                  (tile.flips.horizontally ? tileSize.width : 0),
+              tile.y.toDouble() * tileSize.height +
+                  (tile.flips.vertically ? tileSize.height : 0),
+            ),
+            rotation: flips.angle * math.pi / 2,
+            scale: tileSize.width / tile.width,
+          );
         });
       });
     });
