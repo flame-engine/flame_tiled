@@ -5,7 +5,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/widgets.dart' hide Animation, Image;
-import 'package:tiled/tiled.dart' show ObjectGroup, TmxObject;
+import 'package:tiled/tiled.dart' show ObjectGroup, TiledObject;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +29,7 @@ class TiledGame extends BaseGame {
     final ObjectGroup objGroup =
         await tiledMap.getObjectGroupFromLayer("AnimatedCoins");
     coins = await images.load('coins.png');
-
-    objGroup.tmxObjects.forEach((TmxObject obj) {
+    objGroup.objects.forEach((TiledObject obj) {
       final comp = SpriteAnimationComponent(
         position: Vector2(20.0, 20.0),
         animation: SpriteAnimation.fromFrameData(
@@ -42,8 +41,8 @@ class TiledGame extends BaseGame {
           ),
         ),
       );
-      comp.x = obj.x!.toDouble();
-      comp.y = obj.y!.toDouble();
+      comp.x = obj.x.toDouble();
+      comp.y = obj.y.toDouble();
       add(comp);
     });
   }
