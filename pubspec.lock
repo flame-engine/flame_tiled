@@ -355,9 +355,11 @@ packages:
   tiled:
     dependency: "direct main"
     description:
-      name: tiled
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: tileByGid-fix
+      resolved-ref: b8339a65e53f5785ce62f8a88d874fd2ceb24385
+      url: "https://github.com/supagu/tiled.dart.git"
+    source: git
     version: "0.7.0"
   typed_data:
     dependency: transitive

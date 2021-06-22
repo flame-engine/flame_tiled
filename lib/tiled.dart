@@ -2,12 +2,12 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:xml/xml.dart';
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:tiled/tiled.dart';
-
 /// Tiled represents all flips and rotation using three possible flips: horizontal, vertical and diagonal.
 /// This class converts that representation to a simpler one, that uses one angle (with pi/2 steps) and two flips (H or V).
 /// More reference: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
@@ -97,11 +97,26 @@ class Tiled {
       _loaded = true;
     }
   }
+XmlDocument _parseXml(String input) => XmlDocument.parse(input);
 
-  Future<TiledMap> _loadMap() {
-    return Flame.bundle.loadString('assets/tiles/$filename').then((contents) {
-      return TileMapParser.parseTmx(contents);
-    });
+Future<TiledMap> _loadMap() async {
+    String file = await Flame.bundle.loadString('assets/tiles/$filename');
+    final tsxSourcePath = _parseXml(file)
+        .rootElement
+        .children
+        .whereType<XmlElement>()
+        .firstWhere(
+          (element) => element.name.local == 'tileset',
+        )
+        .getAttribute('source');
+    if (tsxSourcePath != null) {
+      final TiledTsxProvider tsxProvider = TiledTsxProvider(tsxSourcePath);
+      await tsxProvider.initialize();
+
+      return TileMapParser.parseTmx(file, tsx: tsxProvider);
+    } else {
+      return TileMapParser.parseTmx(file);
+    }
   }
 
   Future<Map<String?, SpriteBatch>> _loadImages(TiledMap map) async {
@@ -130,44 +145,46 @@ class Tiled {
 
   void _drawTiles(TiledMap map) {
     map.layers.where((layer) => layer.visible).forEach((Layer layer) {
-      var tileLayer = layer as TileLayer;
-      var tileData = tileLayer.tileData;
-      if (tileData != null) {
-        tileData.forEach((tileRow) {
-          tileRow.forEach((tile) {
-            if (tile.tile == 0) {
-              return;
-            }
-            Tile t = map.tileByGid(tile.tile);
-            TiledImage? img = t.image;
-            if (img != null) {
-              final batch = batches[img.source]!;
-              final rect = Tileset().computeDrawRect(t);
+      if (layer.runtimeType is TileLayer) {
+        var tileLayer = layer as TileLayer;
+        var tileData = tileLayer.tileData;
+        if (tileData != null) {
+          tileData.forEach((tileRow) {
+            tileRow.forEach((tile) {
+              if (tile.tile == 0) {
+                return;
+              }
+              Tile t = map.tileByGid(tile.tile);
+              TiledImage? img = t.image;
+              if (img != null) {
+                final batch = batches[img.source]!;
+                final rect = Tileset().computeDrawRect(t);
 
-              final src = Rect.fromLTWH(
-                rect.left.toDouble(),
-                rect.top.toDouble(),
-                rect.width.toDouble(),
-                rect.height.toDouble(),
-              );
+                final src = Rect.fromLTWH(
+                  rect.left.toDouble(),
+                  rect.top.toDouble(),
+                  rect.width.toDouble(),
+                  rect.height.toDouble(),
+                );
 
-              final flips = _SimpleFlips.fromFlips(tile.flips);
-              final Size tileSize = destTileSize;
+                final flips = _SimpleFlips.fromFlips(tile.flips);
+                final Size tileSize = destTileSize;
 
-              batch.add(
-                source: src,
-                offset: Vector2(
-                  rect.left * tileSize.width +
-                      (tile.flips.horizontally ? tileSize.width : 0),
-                  rect.top * tileSize.height +
-                      (tile.flips.vertically ? tileSize.height : 0),
-                ),
-                rotation: flips.angle * math.pi / 2,
-                scale: tileSize.width / rect.width,
-              );
-            }
+                batch.add(
+                  source: src,
+                  offset: Vector2(
+                    rect.left * tileSize.width +
+                        (tile.flips.horizontally ? tileSize.width : 0),
+                    rect.top * tileSize.height +
+                        (tile.flips.vertically ? tileSize.height : 0),
+                  ),
+                  rotation: flips.angle * math.pi / 2,
+                  scale: tileSize.width / rect.width,
+                );
+              }
+            });
           });
-        });
+        }
       }
     });
   }
@@ -192,5 +209,22 @@ class Tiled {
           .firstWhere((layer) => layer is ObjectGroup && layer.name == name);
       return g as ObjectGroup;
     });
+  }
+}
+
+class TiledTsxProvider implements TsxProvider {
+  late String data;
+  final String key;
+
+  Future<void> initialize() async {
+    this.data = await Flame.bundle.loadString('assets/tiles/$key');
+  }
+
+  TiledTsxProvider(this.key);
+
+  @override
+  Parser getSource(String key) {
+    final node = XmlDocument.parse(this.data).rootElement;
+    return XmlParser(node);
   }
 }
