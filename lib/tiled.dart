@@ -114,7 +114,6 @@ class Tiled {
     if (tsxSourcePath != null) {
       final TiledTsxProvider tsxProvider = TiledTsxProvider(tsxSourcePath);
       await tsxProvider.initialize();
-
       return TileMapParser.parseTmx(file, tsx: tsxProvider);
     } else {
       return TileMapParser.parseTmx(file);
@@ -123,12 +122,14 @@ class Tiled {
 
   Future<Map<String?, SpriteBatch>> _loadImages(TiledMap map) async {
     final Map<String?, SpriteBatch> result = {};
+
     await Future.forEach(map.tiledImages(), ((TiledImage img) async {
       String? src = img.source;
       if (src != null) {
         result[src] = await SpriteBatch.load(src);
       }
     }));
+
     /*
     await Future.forEach(map.tilesets, (Tileset tileset) async {
       await Future.forEach(tileset.tiles, (Tile tmxImage) async {
@@ -155,23 +156,24 @@ class Tiled {
 
   void _drawTiles(TiledMap map) {
     map.layers.where((layer) => layer.visible).forEach((Layer tileLayer) {
-      print("Hallo");
       if (tileLayer is TileLayer) {
         var tileData = tileLayer.tileData;
         if (tileData != null) {
+          int ty = -1;
           tileData.forEach((tileRow) {
+            ty++;
+            int tx = -1;
             tileRow.forEach((tile) {
+              tx++;
               if (tile.tile == 0) {
                 return;
               }
               Tile t = map.tileByGid(tile.tile);
-              //var t = map.tilesetByTileGId(tile.tile);
-              //t.image = map.tilesetByTileGId(tile.tile).image;
-
-              TiledImage? img = t.image;
+              Tileset ts = map.tilesetByTileGId(tile.tile);
+              TiledImage? img = t.image ?? ts.image;
               if (img != null) {
-                final batch = batches[img.source]!;
-                final rect = Tileset().computeDrawRect(t);
+                final batch = batches[img.source];
+                final rect = ts.computeDrawRect(t);
 
                 final src = Rect.fromLTWH(
                   rect.left.toDouble(),
@@ -182,18 +184,19 @@ class Tiled {
 
                 final flips = _SimpleFlips.fromFlips(tile.flips);
                 final Size tileSize = destTileSize;
-
-                batch.add(
-                  source: src,
-                  offset: Vector2(
-                    rect.left * tileSize.width +
-                        (tile.flips.horizontally ? tileSize.width : 0),
-                    rect.top * tileSize.height +
-                        (tile.flips.vertically ? tileSize.height : 0),
-                  ),
-                  rotation: flips.angle * math.pi / 2,
-                  scale: tileSize.width / rect.width,
-                );
+                if (batch != null) {
+                  batch.add(
+                    source: src,
+                    offset: Vector2(
+                      tx * tileSize.width +
+                          (tile.flips.horizontally ? tileSize.width : 0),
+                      ty * tileSize.height +
+                          (tile.flips.vertically ? tileSize.height : 0),
+                    ),
+                    rotation: flips.angle * math.pi / 2,
+                    scale: tileSize.width / rect.width,
+                  );
+                }
               }
             });
           });
@@ -210,7 +213,6 @@ class Tiled {
     }
 
     batches.forEach((_, batch) {
-      //c.drawImage(batch.atlas, Offset(0, 0), Paint());
       batch.render(c);
     });
   }
