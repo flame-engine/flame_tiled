@@ -8,6 +8,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:tiled/tiled.dart';
+
 /// Tiled represents all flips and rotation using three possible flips: horizontal, vertical and diagonal.
 /// This class converts that representation to a simpler one, that uses one angle (with pi/2 steps) and two flips (H or V).
 /// More reference: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
@@ -89,17 +90,18 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    String? src = map.tilesets[0].image!.source;
-    if (src != null) {
-      image = await Flame.images.load(src);
-      batches = await _loadImages(map);
-      generate();
-      _loaded = true;
-    }
+    //String? src = map.tilesets[0].image!.source;
+    //if (src != null) {
+    //image = await Flame.images.load(src);
+    batches = await _loadImages(map);
+    generate();
+    _loaded = true;
+    //}
   }
-XmlDocument _parseXml(String input) => XmlDocument.parse(input);
 
-Future<TiledMap> _loadMap() async {
+  XmlDocument _parseXml(String input) => XmlDocument.parse(input);
+
+  Future<TiledMap> _loadMap() async {
     String file = await Flame.bundle.loadString('assets/tiles/$filename');
     final tsxSourcePath = _parseXml(file)
         .rootElement
@@ -121,6 +123,13 @@ Future<TiledMap> _loadMap() async {
 
   Future<Map<String?, SpriteBatch>> _loadImages(TiledMap map) async {
     final Map<String?, SpriteBatch> result = {};
+    await Future.forEach(map.tiledImages(), ((TiledImage img) async {
+      String? src = img.source;
+      if (src != null) {
+        result[src] = await SpriteBatch.load(src);
+      }
+    }));
+    /*
     await Future.forEach(map.tilesets, (Tileset tileset) async {
       await Future.forEach(tileset.tiles, (Tile tmxImage) async {
         TiledImage? img = tmxImage.image;
@@ -132,6 +141,7 @@ Future<TiledMap> _loadMap() async {
         }
       });
     });
+*/
     return result;
   }
 
@@ -144,9 +154,9 @@ Future<TiledMap> _loadMap() async {
   }
 
   void _drawTiles(TiledMap map) {
-    map.layers.where((layer) => layer.visible).forEach((Layer layer) {
-      if (layer.runtimeType is TileLayer) {
-        var tileLayer = layer as TileLayer;
+    map.layers.where((layer) => layer.visible).forEach((Layer tileLayer) {
+      print("Hallo");
+      if (tileLayer is TileLayer) {
         var tileData = tileLayer.tileData;
         if (tileData != null) {
           tileData.forEach((tileRow) {
@@ -155,6 +165,9 @@ Future<TiledMap> _loadMap() async {
                 return;
               }
               Tile t = map.tileByGid(tile.tile);
+              //var t = map.tilesetByTileGId(tile.tile);
+              //t.image = map.tilesetByTileGId(tile.tile).image;
+
               TiledImage? img = t.image;
               if (img != null) {
                 final batch = batches[img.source]!;
@@ -197,6 +210,7 @@ Future<TiledMap> _loadMap() async {
     }
 
     batches.forEach((_, batch) {
+      //c.drawImage(batch.atlas, Offset(0, 0), Paint());
       batch.render(c);
     });
   }

@@ -19,7 +19,13 @@ class TiledComponent extends Component {
 
   @override
   void render(Canvas canvas) {
+    //_tiled!.generate();
     _tiled!.render(canvas);
+  }
+
+  @override
+  Future<void> onLoad() async {
+    await future;
   }
 
   bool loaded() => _tiled!.loaded();
