@@ -129,20 +129,6 @@ class Tiled {
         result[src] = await SpriteBatch.load(src);
       }
     }));
-
-    /*
-    await Future.forEach(map.tilesets, (Tileset tileset) async {
-      await Future.forEach(tileset.tiles, (Tile tmxImage) async {
-        TiledImage? img = tmxImage.image;
-        if (img != null) {
-          String? src = img.source;
-          if (src != null) {
-            result[src] = await SpriteBatch.load(src);
-          }
-        }
-      });
-    });
-*/
     return result;
   }
 
