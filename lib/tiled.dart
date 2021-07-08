@@ -3,12 +3,11 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:xml/xml.dart';
-
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/material.dart' show Colors;
-import 'package:tiled/tiled.dart' hide Image;
+import 'package:tiled/tiled.dart';
 
 /// Tiled represents all flips and rotation using three possible flips: horizontal, vertical and diagonal.
 /// This class converts that representation to a simpler one, that uses one angle (with pi/2 steps) and two flips (H or V).
@@ -74,7 +73,7 @@ class _SimpleFlips {
 /// This component renders a tile map based on a TMX file from Tiled.
 class Tiled {
   String filename;
-  late TileMap map;
+  late TiledMap map;
   Image? image;
   Map<String?, SpriteBatch> batches = <String, SpriteBatch>{};
   Future? future;
@@ -91,42 +90,45 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    image = await Flame.images.load(map.tilesets[0].image!.source!);
+    //String? src = map.tilesets[0].image!.source;
+    //if (src != null) {
+    //image = await Flame.images.load(src);
     batches = await _loadImages(map);
     generate();
     _loaded = true;
+    //}
   }
 
   XmlDocument _parseXml(String input) => XmlDocument.parse(input);
 
-  Future<TileMap> _loadMap() async {
+  Future<TiledMap> _loadMap() async {
     String file = await Flame.bundle.loadString('assets/tiles/$filename');
-    final parser = TileMapParser();
-
-    final String? tsxSourcePath = _parseXml(file)
+    final tsxSourcePath = _parseXml(file)
         .rootElement
         .children
-        .whereType<XmlElement?>()
-        .firstWhere((XmlElement? element) => element?.name.local == 'tileset',
-            orElse: () => null)
-        ?.getAttribute('source');
+        .whereType<XmlElement>()
+        .firstWhere(
+          (element) => element.name.local == 'tileset',
+        )
+        .getAttribute('source');
     if (tsxSourcePath != null) {
       final TiledTsxProvider tsxProvider = TiledTsxProvider(tsxSourcePath);
       await tsxProvider.initialize();
-
-      return parser.parse(file, tsx: tsxProvider);
+      return TileMapParser.parseTmx(file, tsx: tsxProvider);
     } else {
-      return parser.parse(file);
+      return TileMapParser.parseTmx(file);
     }
   }
 
-  Future<Map<String?, SpriteBatch>> _loadImages(TileMap map) async {
+  Future<Map<String?, SpriteBatch>> _loadImages(TiledMap map) async {
     final Map<String?, SpriteBatch> result = {};
-    await Future.forEach(map.tilesets, (Tileset tileset) async {
-      await Future.forEach(tileset.images, (dynamic tmxImage) async {
-        result[tmxImage.source] = await SpriteBatch.load(tmxImage.source);
-      });
-    });
+
+    await Future.forEach(map.tiledImages(), ((TiledImage img) async {
+      String? src = img.source;
+      if (src != null) {
+        result[src] = await SpriteBatch.load(src);
+      }
+    }));
     return result;
   }
 
@@ -138,41 +140,54 @@ class Tiled {
     _drawTiles(map);
   }
 
-  void _drawTiles(TileMap map) {
-    map.layers.where((layer) => layer.visible!).forEach((layer) {
-      layer.tiles!.forEach((tileRow) {
-        tileRow.forEach((Tile? tile) {
-          if (tile!.gid == 0) {
-            return;
-          }
+  void _drawTiles(TiledMap map) {
+    map.layers.where((layer) => layer.visible).forEach((Layer tileLayer) {
+      if (tileLayer is TileLayer) {
+        var tileData = tileLayer.tileData;
+        if (tileData != null) {
+          int ty = -1;
+          tileData.forEach((tileRow) {
+            ty++;
+            int tx = -1;
+            tileRow.forEach((tile) {
+              tx++;
+              if (tile.tile == 0) {
+                return;
+              }
+              Tile t = map.tileByGid(tile.tile);
+              Tileset ts = map.tilesetByTileGId(tile.tile);
+              TiledImage? img = t.image ?? ts.image;
+              if (img != null) {
+                final batch = batches[img.source];
+                final rect = ts.computeDrawRect(t);
 
-          final batch = batches[tile.image!.source]!;
+                final src = Rect.fromLTWH(
+                  rect.left.toDouble(),
+                  rect.top.toDouble(),
+                  rect.width.toDouble(),
+                  rect.height.toDouble(),
+                );
 
-          final rect = tile.computeDrawRect();
-
-          final src = Rect.fromLTWH(
-            rect.left.toDouble(),
-            rect.top.toDouble(),
-            rect.width.toDouble(),
-            rect.height.toDouble(),
-          );
-
-          final flips = _SimpleFlips.fromFlips(tile.flips!);
-          final Size tileSize = destTileSize;
-
-          batch.add(
-            source: src,
-            offset: Vector2(
-              tile.x!.toDouble() * tileSize.width +
-                  (tile.flips!.horizontally ? tileSize.width : 0),
-              tile.y!.toDouble() * tileSize.height +
-                  (tile.flips!.vertically ? tileSize.height : 0),
-            ),
-            rotation: flips.angle * math.pi / 2,
-            scale: tileSize.width / tile.width!,
-          );
-        });
-      });
+                final flips = _SimpleFlips.fromFlips(tile.flips);
+                final Size tileSize = destTileSize;
+                if (batch != null) {
+                  batch.add(
+                    source: src,
+                    offset: Vector2(
+                      tx * tileSize.width +
+                          (tile.flips.horizontally ? tileSize.width : 0),
+                      ty * tileSize.height +
+                          (tile.flips.vertically ? tileSize.height : 0),
+                    ),
+                    rotation: flips.angle * math.pi / 2,
+                    scale: tileSize.width / rect.width,
+                  );
+                }
+              }
+            });
+          });
+        }
+      }
     });
   }
 
@@ -192,14 +207,15 @@ class Tiled {
   /// Use this to add custom behaviour to special objects and groups.
   Future<ObjectGroup> getObjectGroupFromLayer(String name) {
     return future!.then((onValue) {
-      return map.objectGroups
-          .firstWhere((objectGroup) => objectGroup.name == name);
+      var g = map.layers
+          .firstWhere((layer) => layer is ObjectGroup && layer.name == name);
+      return g as ObjectGroup;
     });
   }
 }
 
 class TiledTsxProvider implements TsxProvider {
-  String? data;
+  late String data;
   final String key;
 
   Future<void> initialize() async {
@@ -208,7 +224,9 @@ class TiledTsxProvider implements TsxProvider {
 
   TiledTsxProvider(this.key);
 
-  String getSource(String key) {
-    return data!;
+  @override
+  Parser getSource(String key) {
+    final node = XmlDocument.parse(this.data).rootElement;
+    return XmlParser(node);
   }
 }
