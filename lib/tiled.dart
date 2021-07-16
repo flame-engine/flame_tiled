@@ -90,13 +90,9 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    //String? src = map.tilesets[0].image!.source;
-    //if (src != null) {
-    //image = await Flame.images.load(src);
     batches = await _loadImages(map);
     generate();
     _loaded = true;
-    //}
   }
 
   XmlDocument _parseXml(String input) => XmlDocument.parse(input);

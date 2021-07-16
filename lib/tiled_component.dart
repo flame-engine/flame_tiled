@@ -6,7 +6,7 @@ import 'dart:ui';
 import './tiled.dart';
 
 class TiledComponent extends Component {
-  Tiled? _tiled;
+  late Tiled _tiled;
 
   TiledComponent(String filename, Size destTileSize) {
     _tiled = Tiled(filename, destTileSize);
@@ -19,8 +19,7 @@ class TiledComponent extends Component {
 
   @override
   void render(Canvas canvas) {
-    //_tiled!.generate();
-    _tiled!.render(canvas);
+    _tiled.render(canvas);
   }
 
   @override
@@ -28,10 +27,10 @@ class TiledComponent extends Component {
     await future;
   }
 
-  bool loaded() => _tiled!.loaded();
+  bool loaded() => _tiled.loaded();
 
-  get future => _tiled!.future;
+  get future => _tiled.future;
 
   Future<ObjectGroup> getObjectGroupFromLayer(String name) =>
-      _tiled!.getObjectGroupFromLayer(name);
+      _tiled.getObjectGroupFromLayer(name);
 }
