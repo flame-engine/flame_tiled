@@ -119,7 +119,7 @@ packages:
       name: flame
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.0-releasecandidate.11"
+    version: "1.0.0-releasecandidate.13"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -206,7 +206,7 @@ packages:
       name: ordered_set
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.0"
+    version: "3.1.0"
   package_config:
     dependency: transitive
     description:
