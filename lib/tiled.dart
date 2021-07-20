@@ -10,63 +10,65 @@ import 'package:flutter/material.dart' show Colors;
 import 'package:tiled/tiled.dart';
 
 /// Tiled represents all flips and rotation using three possible flips: horizontal, vertical and diagonal.
-/// This class converts that representation to a simpler one, that uses one angle (with pi/2 steps) and two flips (H or V).
+/// This class converts that representation to a simpler one, that uses one angle (with pi/2 steps) and two shifts (X and Y).
 /// More reference: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
 class _SimpleFlips {
   /// The angle (in steps of pi/2 rads), clockwise, around the center of the tile.
   final int angle;
 
-  /// Whether to flip across a central vertical axis (passing through the center).
-  final bool flipH;
+  /// How much to shift in the X dimension after rotating.
+  final int shiftX;
 
-  /// Whether to flip across a central horizontal axis (passing through the center).
-  final bool flipV;
+  /// How much to shift in the Y dimension after rotating.
+  final int shiftY;
 
-  _SimpleFlips(this.angle, this.flipH, this.flipV);
+  _SimpleFlips(this.angle, this.shiftX, this.shiftY);
 
-  /// This is the conversion from the truth table that I drew.
   factory _SimpleFlips.fromFlips(Flips flips) {
-    int angle;
-    bool flipV, flipH;
+    int angle, shiftX, shiftY;
 
     if (!flips.diagonally && !flips.vertically && !flips.horizontally) {
       angle = 0;
-      flipV = false;
-      flipH = false;
+      shiftX = 0;
+      shiftY = 0;
     } else if (!flips.diagonally && !flips.vertically && flips.horizontally) {
+      // Unsupported
       angle = 0;
-      flipV = false;
-      flipH = true;
+      shiftX = 0;
+      shiftY = 0;
     } else if (!flips.diagonally && flips.vertically && !flips.horizontally) {
+      // Unsupported
       angle = 0;
-      flipV = true;
-      flipH = false;
+      shiftX = 0;
+      shiftY = 0;
     } else if (!flips.diagonally && flips.vertically && flips.horizontally) {
       angle = 2;
-      flipV = false;
-      flipH = false;
+      shiftX = 1;
+      shiftY = 1;
     } else if (flips.diagonally && !flips.vertically && !flips.horizontally) {
-      angle = 1;
-      flipV = false;
-      flipH = true;
+      // Unsupported
+      angle = 0;
+      shiftX = 0;
+      shiftY = 0;
     } else if (flips.diagonally && !flips.vertically && flips.horizontally) {
       angle = 1;
-      flipV = false;
-      flipH = false;
+      shiftX = 1;
+      shiftY = 0;
     } else if (flips.diagonally && flips.vertically && !flips.horizontally) {
       angle = 3;
-      flipV = false;
-      flipH = false;
+      shiftX = 0;
+      shiftY = 1;
     } else if (flips.diagonally && flips.vertically && flips.horizontally) {
-      angle = 1;
-      flipV = true;
-      flipH = false;
+      // Unsupported
+      angle = 0;
+      shiftX = 0;
+      shiftY = 0;
     } else {
       // this should be exhaustive
       throw 'Invalid combination of booleans: $flips';
     }
 
-    return _SimpleFlips(angle, flipH, flipV);
+    return _SimpleFlips(angle, shiftX, shiftY);
   }
 }
 
@@ -90,13 +92,9 @@ class Tiled {
 
   Future _load() async {
     map = await _loadMap();
-    //String? src = map.tilesets[0].image!.source;
-    //if (src != null) {
-    //image = await Flame.images.load(src);
     batches = await _loadImages(map);
     generate();
     _loaded = true;
-    //}
   }
 
   XmlDocument _parseXml(String input) => XmlDocument.parse(input);
@@ -174,10 +172,8 @@ class Tiled {
                   batch.add(
                     source: src,
                     offset: Vector2(
-                      tx * tileSize.width +
-                          (tile.flips.horizontally ? tileSize.width : 0),
-                      ty * tileSize.height +
-                          (tile.flips.vertically ? tileSize.height : 0),
+                      (tx + flips.shiftX) * tileSize.width,
+                      (ty + flips.shiftY) * tileSize.height,
                     ),
                     rotation: flips.angle * math.pi / 2,
                     scale: tileSize.width / rect.width,
