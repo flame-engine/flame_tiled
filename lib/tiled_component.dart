@@ -1,4 +1,4 @@
-import 'package:flame/components/component.dart';
+import 'package:flame/components.dart';
 import 'package:tiled/tiled.dart';
 
 import 'dart:ui';
@@ -6,7 +6,7 @@ import 'dart:ui';
 import './tiled.dart';
 
 class TiledComponent extends Component {
-  Tiled _tiled;
+  late Tiled _tiled;
 
   TiledComponent(String filename, Size destTileSize) {
     _tiled = Tiled(filename, destTileSize);
@@ -23,6 +23,10 @@ class TiledComponent extends Component {
   }
 
   @override
+  Future<void> onLoad() async {
+    await future;
+  }
+
   bool loaded() => _tiled.loaded();
 
   get future => _tiled.future;
